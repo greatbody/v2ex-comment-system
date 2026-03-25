@@ -1,0 +1,10 @@
+name = "v2ex-comment-worker"
+main = "src/index.js"
+compatibility_date = "2024-01-01"
+
+# 创建 D1 数据库后，将 database_id 填入此处
+# 运行: wrangler d1 create v2ex-comments
+[[d1_databases]]
+binding = "DB"
+database_name = "v2ex-comments"
+database_id = "70124b66-549e-4059-afde-b2835c052784"
