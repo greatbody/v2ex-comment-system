@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         V2EX 外挂评论系统
 // @namespace    https://github.com/greatbody/v2ex-comment-system
-// @version      1.0.0
+// @version      1.0.2
 // @description  在 V2EX 帖子页面左侧显示独立评论系统，数据存储在 Cloudflare D1
 // @author       greatbody
 // @match        https://www.v2ex.com/t/*
@@ -402,15 +402,89 @@
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         font-size: 13px;
         color: #333;
-        transition: opacity 0.2s;
-      }
-
-      #v2ex-ext-comment-panel.collapsed {
-        max-height: 40px;
+        transition: none;
         overflow: hidden;
       }
 
+      #v2ex-ext-comment-panel.collapsed {
+        width: 40px;
+        max-height: 40px;
+        border-radius: 50%;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        background: #4a90d9;
+        border-color: #4a90d9;
+        cursor: pointer;
+      }
+
+      #v2ex-ext-comment-panel.collapsed .v2ex-ext-header {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        width: 40px;
+        height: 40px;
+        border-bottom: none;
+        background: transparent;
+        border-radius: 50%;
+      }
+
+      #v2ex-ext-comment-panel.collapsed .v2ex-ext-header > div:first-child {
+        display: none;
+      }
+
+      #v2ex-ext-comment-panel.collapsed .v2ex-ext-header-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 18px;
+        transform: none;
+      }
+
+      #v2ex-ext-comment-panel.collapsed .v2ex-ext-comments,
+      #v2ex-ext-comment-panel.collapsed .v2ex-ext-form,
+      #v2ex-ext-comment-panel.collapsed .v2ex-ext-footer {
+        display: none;
+      }
+
+      #v2ex-ext-comment-panel.collapsed:hover {
+        box-shadow: 0 3px 12px rgba(74,144,217,0.4);
+        transform: scale(1.08);
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+      }
+
+      #v2ex-ext-comment-panel.collapsed .v2ex-ext-header-badge {
+        display: none;
+      }
+
+      .v2ex-ext-collapsed-badge {
+        display: none;
+      }
+
+      #v2ex-ext-comment-panel.collapsed .v2ex-ext-collapsed-badge {
+        display: block;
+        position: absolute;
+        top: -4px;
+        right: -4px;
+        margin: 0;
+        font-size: 10px;
+        padding: 0 5px;
+        min-width: 16px;
+        height: 16px;
+        line-height: 16px;
+        text-align: center;
+        border-radius: 8px;
+        background: #e74c3c;
+        color: #fff;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+      }
+
+      #v2ex-ext-comment-panel.collapsed .v2ex-ext-collapsed-badge.v2ex-ext-badge-zero {
+        display: none;
+      }
+
       .v2ex-ext-header {
+        position: relative;
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -440,7 +514,7 @@
       .v2ex-ext-header-toggle {
         font-size: 16px;
         color: #999;
-        transition: transform 0.2s;
+        transition: transform 0.3s;
       }
 
       .collapsed .v2ex-ext-header-toggle {
@@ -685,7 +759,8 @@
           <span class="v2ex-ext-header-title">外挂评论</span>
           <span class="v2ex-ext-header-badge" id="v2ex-ext-count">0</span>
         </div>
-        <span class="v2ex-ext-header-toggle" id="v2ex-ext-toggle">▼</span>
+        <span class="v2ex-ext-header-toggle" id="v2ex-ext-toggle"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
+        <span class="v2ex-ext-collapsed-badge v2ex-ext-badge-zero" id="v2ex-ext-collapsed-count">0</span>
       </div>
       <div class="v2ex-ext-comments" id="v2ex-ext-comments">
         <div class="v2ex-ext-loading">加载中...</div>
@@ -775,7 +850,11 @@
 
         // 更新计数
         const badge = document.getElementById('v2ex-ext-count');
-        badge.textContent = parseInt(badge.textContent) + 1;
+        const newCount = parseInt(badge.textContent) + 1;
+        badge.textContent = newCount;
+        const collapsedBadge = document.getElementById('v2ex-ext-collapsed-count');
+        collapsedBadge.textContent = newCount;
+        collapsedBadge.classList.toggle('v2ex-ext-badge-zero', newCount === 0);
 
         // 滚到底部
         const commentsEl = document.getElementById('v2ex-ext-comments');
@@ -910,6 +989,9 @@
       const data = await apiRequest('GET', `/api/comments?topic_id=${topicId}`);
       renderComments(data.comments);
       document.getElementById('v2ex-ext-count').textContent = data.total;
+      const collapsedBadge = document.getElementById('v2ex-ext-collapsed-count');
+      collapsedBadge.textContent = data.total;
+      collapsedBadge.classList.toggle('v2ex-ext-badge-zero', data.total === 0);
     } catch (err) {
       const commentsEl = document.getElementById('v2ex-ext-comments');
       commentsEl.innerHTML = `<div class="v2ex-ext-error" style="padding:12px;text-align:center;">加载失败: ${err.error || '网络错误'}</div>`;
