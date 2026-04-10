@@ -713,12 +713,32 @@
         fill: currentColor;
       }
 
-      /* 响应式：屏幕太窄时隐藏 */
-      @media (max-width: 1280px) {
-        #v2ex-ext-comment-panel {
-          display: none;
-        }
+      #v2ex-ext-comment-panel.v2ex-ext-inline {
+        position: static;
+        width: auto;
+        max-height: none;
+        border-radius: 0;
+        box-shadow: none;
+        border: none;
+        border-top: 3px solid #4a90d9;
+        border-bottom: 1px solid #f0f0f0;
+        margin: 0;
+        font-size: 14px;
+        text-align: left;
       }
+
+      #v2ex-ext-comment-panel.v2ex-ext-inline .v2ex-ext-header {
+        border-radius: 0;
+      }
+
+      #v2ex-ext-comment-panel.v2ex-ext-inline .v2ex-ext-comments {
+        max-height: none;
+      }
+
+      #v2ex-ext-comment-panel.v2ex-ext-inline .v2ex-ext-form {
+        border-radius: 0;
+      }
+
     `;
     const style = document.createElement('style');
     style.textContent = css;
@@ -795,9 +815,54 @@
 
     document.body.appendChild(panel);
 
+    const NARROW_BREAKPOINT = 1280;
+    let currentMode = 'sidebar';
+
+    function isNarrowScreen() {
+      return window.innerWidth <= NARROW_BREAKPOINT;
+    }
+
+    function findInsertionPoint() {
+      const mainEl = document.getElementById('Main');
+      if (!mainEl) return null;
+      const boxes = mainEl.querySelectorAll(':scope > .box');
+      if (boxes.length >= 2) return boxes[1];
+      if (boxes.length === 1) return null;
+      return null;
+    }
+
+    function switchToInline() {
+      if (currentMode === 'inline') return;
+      const anchor = findInsertionPoint();
+      if (!anchor) return;
+      panel.classList.remove('collapsed');
+      panel.classList.add('v2ex-ext-inline');
+      anchor.parentNode.insertBefore(panel, anchor);
+      currentMode = 'inline';
+    }
+
+    function switchToSidebar() {
+      if (currentMode === 'sidebar') return;
+      panel.classList.remove('v2ex-ext-inline');
+      document.body.appendChild(panel);
+      currentMode = 'sidebar';
+    }
+
+    function applyLayout() {
+      if (isNarrowScreen()) {
+        switchToInline();
+      } else {
+        switchToSidebar();
+      }
+    }
+
+    applyLayout();
+    window.addEventListener('resize', applyLayout);
+
     // ── 折叠/展开 ──
     const header = panel.querySelector('.v2ex-ext-header');
     header.addEventListener('click', () => {
+      if (currentMode === 'inline') return;
       panel.classList.toggle('collapsed');
     });
 
