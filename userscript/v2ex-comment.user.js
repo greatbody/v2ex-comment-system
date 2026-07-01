@@ -414,6 +414,7 @@
         background: #4a90d9;
         border-color: #4a90d9;
         cursor: pointer;
+        overflow: visible;
       }
 
       #v2ex-ext-comment-panel.collapsed .v2ex-ext-header {
@@ -816,10 +817,18 @@
     document.body.appendChild(panel);
 
     const NARROW_BREAKPOINT = 1280;
+    // 面板宽度(280) + 左偏移(12) + 间距(16)
+    const PANEL_RIGHT_EDGE = 308;
     let currentMode = 'sidebar';
 
     function isNarrowScreen() {
       return window.innerWidth <= NARROW_BREAKPOINT;
+    }
+
+    function hasSidebarSpace() {
+      const mainEl = document.getElementById('Main');
+      if (!mainEl) return false;
+      return mainEl.getBoundingClientRect().left > PANEL_RIGHT_EDGE;
     }
 
     function findInsertionPoint() {
@@ -842,10 +851,17 @@
     }
 
     function switchToSidebar() {
-      if (currentMode === 'sidebar') return;
-      panel.classList.remove('v2ex-ext-inline');
-      document.body.appendChild(panel);
-      currentMode = 'sidebar';
+      if (currentMode !== 'sidebar') {
+        panel.classList.remove('v2ex-ext-inline');
+        document.body.appendChild(panel);
+        currentMode = 'sidebar';
+      }
+      // 空间不足时收起，空间足够时展开
+      if (hasSidebarSpace()) {
+        panel.classList.remove('collapsed');
+      } else {
+        panel.classList.add('collapsed');
+      }
     }
 
     function applyLayout() {
